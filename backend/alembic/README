@@ -1,0 +1,9 @@
+Alembic migrations for the monolith.
+
+Common commands (run from the backend/ directory):
+
+  alembic upgrade head        # apply all migrations
+  alembic downgrade -1        # revert the last migration
+  alembic revision -m "msg" --autogenerate
+
+The database URL comes from app.config.settings (env var DATABASE_URL).
