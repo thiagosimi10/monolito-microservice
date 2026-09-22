@@ -1,6 +1,19 @@
 services:
   postgres:
     image: postgres:16
+    # --- CDC / logical replication (added for the cdc-infrastructure phase) ---
+    # Only these three settings changed. wal_level=logical is what lets Debezium
+    # read row changes from the WAL. The sender/slot caps are deliberately small
+    # (lab sizing). Applying this needs a container RECREATE (docker compose
+    # up -d) but NOT a volume wipe - existing data is preserved.
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=4"
+      - "-c"
+      - "max_replication_slots=4"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-monolith}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -9,6 +22,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      # keep the monolith's own private network (backend <-> postgres) ...
+      default: {}
+      # ... and also join the shared cross-repo network so the Debezium
+      # container in cdc-infrastructure can reach this DB as "legacy-postgres".
+      migration-network:
+        aliases:
+          - legacy-postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-monolith}"]
       interval: 5s
@@ -37,3 +58,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  # Shared, externally-managed network. Create it once with:
+  #     docker network create migration-network
+  migration-network:
+    external: true
