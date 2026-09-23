@@ -342,3 +342,27 @@ monolito-microservice/
 ├── .env.example
 └── README.md
 ```
+
+## CI
+
+Todo pull request para `main` (e todo push em `main`) roda, sem deploy e sem credenciais de nuvem:
+
+| Workflow | Job | O que prova |
+|---|---|---|
+| `ci.yml` | **Lint** | `ruff check`, `ruff format --check` (backend), Hadolint (backend + frontend), ShellCheck (`entrypoint.sh`) |
+| | **Type Check** | `mypy` no backend |
+| | **Unit Tests** | `pytest -m unit` + coverage + JUnit |
+| | **Integration Tests** | `alembic upgrade head` em `monolith_test` e `pytest -m integration` contra **PostgreSQL 16 real** |
+| | **Frontend Build** | `npm ci` (lockfile) + `vite build` |
+| | **Build** | `docker build` das duas imagens (não-root), Trivy image (HIGH/CRITICAL corrigível falha), `docker compose config` |
+| `security.yml` | **Security** | Gitleaks (histórico completo), Bandit, pip-audit, `npm audit --audit-level=high`, Trivy config (SARIF). Também semanal. |
+
+Dependências de teste/lint ficam em `backend/requirements-dev.txt` (fora da imagem de runtime).
+O frontend ainda não tem linter nem testes JS; o build de produção é o gate.
+Baseline de coverage do backend: unit 77%, integração 87%.
+
+```bash
+cd backend && pip install -r requirements-dev.txt
+ruff check . && ruff format --check . && mypy
+TEST_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/monolith_test pytest
+```
