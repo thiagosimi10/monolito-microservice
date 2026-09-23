@@ -25,8 +25,9 @@ down:
 seed:
 	$(COMPOSE) exec -T postgres psql -U $(DB_USER) -d $(DB_NAME) < database/seed.sql
 
+# Test/lint tooling is not part of the runtime image (requirements-dev.txt).
 test:
-	$(COMPOSE) exec backend pytest
+	$(COMPOSE) exec backend sh -c "pip install -q -r requirements-dev.txt && pytest"
 
 logs:
 	$(COMPOSE) logs -f
