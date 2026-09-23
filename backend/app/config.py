@@ -7,9 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Full SQLAlchemy URL, e.g. postgresql+psycopg://user:pass@host:5432/dbname
-    database_url: str = (
-        "postgresql+psycopg://postgres:postgres@localhost:5432/monolith"
-    )
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/monolith"
 
     # Comma-separated list of origins allowed by CORS.
     cors_origins: str = "http://localhost:5173"

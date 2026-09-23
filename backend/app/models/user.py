@@ -21,6 +21,4 @@ class User(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    sales: Mapped[list["Sale"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
-    )
+    sales: Mapped[list[Sale]] = relationship(back_populates="user", cascade="all, delete-orphan")

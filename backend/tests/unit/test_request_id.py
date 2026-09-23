@@ -1,6 +1,7 @@
 """Unit test for the X-Request-ID correlation + metrics middleware in
 isolation - a minimal Starlette app, no database.
 """
+
 from __future__ import annotations
 
 from starlette.applications import Starlette
@@ -44,6 +45,7 @@ def test_failing_route_exception_propagates_and_is_not_swallowed():
     app/observability.py) and then re-raises - it must never swallow the
     original exception.
     """
+
     async def boom(request):
         raise RuntimeError("boom")
 

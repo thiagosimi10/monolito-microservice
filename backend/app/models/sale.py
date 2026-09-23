@@ -27,4 +27,4 @@ class Sale(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    user: Mapped["User"] = relationship(back_populates="sales")
+    user: Mapped[User] = relationship(back_populates="sales")

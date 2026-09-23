@@ -1,11 +1,17 @@
 """Unit test for app/observability.py::instrument_db_metrics in isolation -
 a throwaway SQLite in-memory engine, no Postgres.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import create_engine, text
 
-from app.observability import DB_ERRORS_TOTAL, DB_OPERATION_DURATION, SERVICE_NAME, instrument_db_metrics
+from app.observability import (
+    DB_ERRORS_TOTAL,
+    DB_OPERATION_DURATION,
+    SERVICE_NAME,
+    instrument_db_metrics,
+)
 
 
 def _histogram_count(histogram, **labels):

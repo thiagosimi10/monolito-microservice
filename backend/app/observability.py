@@ -5,12 +5,13 @@ Label discipline: only method / route (path *template*, e.g. "/users/{user_id}",
 never the raw path) / status_code are used as Prometheus labels. Never put
 user_id or any other high-cardinality value in a label - see logs for that.
 """
+
 from __future__ import annotations
 
 import logging
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
@@ -134,11 +135,14 @@ def setup_tracing(app: FastAPI, engine) -> None:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
         from opentelemetry.instrumentation.logging import LoggingInstrumentor
         from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-        from opentelemetry.sdk.resources import SERVICE_NAME as OTEL_SERVICE_NAME, Resource
+        from opentelemetry.sdk.resources import SERVICE_NAME as OTEL_SERVICE_NAME
+        from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
     except ImportError:
-        logger.warning("tracing.dependencies_missing", extra={"hint": "otel packages not installed"})
+        logger.warning(
+            "tracing.dependencies_missing", extra={"hint": "otel packages not installed"}
+        )
         return
 
     import os
@@ -146,7 +150,9 @@ def setup_tracing(app: FastAPI, engine) -> None:
     endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4317")
     resource = Resource.create({OTEL_SERVICE_NAME: SERVICE_NAME})
     provider = TracerProvider(resource=resource)
-    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True)))
+    provider.add_span_processor(
+        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True))
+    )
     trace.set_tracer_provider(provider)
 
     FastAPIInstrumentor.instrument_app(app)

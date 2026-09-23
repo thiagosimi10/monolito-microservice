@@ -49,18 +49,14 @@ def create_sale(db: Session, data: SaleCreate) -> dict:
 def list_sales(db: Session) -> list[dict]:
     # Intentional JOIN between sales and users. Disappears once the domains are split.
     rows = db.execute(
-        select(Sale, User.name)
-        .join(User, Sale.user_id == User.id)
-        .order_by(Sale.id)
+        select(Sale, User.name).join(User, Sale.user_id == User.id).order_by(Sale.id)
     ).all()
     return [_row_to_dict(sale, name) for sale, name in rows]
 
 
 def get_sale(db: Session, sale_id: int) -> dict | None:
     row = db.execute(
-        select(Sale, User.name)
-        .join(User, Sale.user_id == User.id)
-        .where(Sale.id == sale_id)
+        select(Sale, User.name).join(User, Sale.user_id == User.id).where(Sale.id == sale_id)
     ).first()
     if row is None:
         return None
