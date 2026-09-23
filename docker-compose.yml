@@ -41,11 +41,30 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://postgres:postgres@postgres:5432/monolith}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      # Sends spans to the OTel Collector in the observability-infrastructure
+      # repo. If that stack isn't running, span export just fails silently
+      # in the background - the API is unaffected either way.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      # keep the monolith's own private network (backend <-> postgres) ...
+      default: {}
+      # ... and also join the shared cross-repo network so Prometheus/Promtail
+      # in observability-infrastructure can scrape :8000/metrics and reach
+      # this service by name. Read-only from that side; no data here changes.
+      migration-network:
+        aliases:
+          - monolith-backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   frontend:
     build: ./frontend
