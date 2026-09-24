@@ -1,14 +1,25 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { api, extractError } from '../api'
+import UserDataTable from './UserDataTable.vue'
 
 const users = ref([])
 const name = ref('')
 const error = ref('')
 const loading = ref(false)
+const listLoading = ref(true)
+const listError = ref('')
 
 async function load() {
-  users.value = (await api.get('/users')).data
+  listError.value = ''
+  listLoading.value = true
+  try {
+    users.value = (await api.get('/users')).data
+  } catch {
+    listError.value = 'Não foi possível carregar os usuários.'
+  } finally {
+    listLoading.value = false
+  }
 }
 
 async function submit() {
@@ -17,16 +28,13 @@ async function submit() {
   try {
     await api.post('/users', { name: name.value })
     name.value = ''
-    await load()
   } catch (err) {
     error.value = extractError(err, 'Erro ao cadastrar usuário')
+    return
   } finally {
     loading.value = false
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString('pt-BR')
+  await load()
 }
 
 onMounted(load)
@@ -45,23 +53,5 @@ onMounted(load)
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Data Cadastro</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="user in users" :key="user.id">
-        <td>{{ user.id }}</td>
-        <td>{{ user.name }}</td>
-        <td>{{ formatDate(user.created_at) }}</td>
-      </tr>
-      <tr v-if="users.length === 0">
-        <td colspan="3">Nenhum usuário cadastrado.</td>
-      </tr>
-    </tbody>
-  </table>
+  <UserDataTable :users="users" :loading="listLoading" :error="listError" @retry="load" />
 </template>
