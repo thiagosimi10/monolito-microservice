@@ -71,6 +71,23 @@ cp .env.example .env
 
 Nunca commite o arquivo `.env` (já está no `.gitignore`).
 
+### Frontend via API Gateway
+
+O frontend lê **uma única variável**, `VITE_API_URL` (`frontend/src/api.js`).
+O default continua sendo o backend direto (`http://localhost:8000`), para
+este repositório funcionar sozinho. Para o frontend usar somente o API
+Gateway (repo `api-gateway`, Kong), aponte a variável para ele:
+
+```powershell
+$env:VITE_API_URL = 'http://localhost:8088'; docker compose up -d frontend
+```
+
+O frontend não sabe (nem precisa saber) se `/users` e `/sales` estão sendo
+servidos pelo monólito ou pelos microsserviços. Essa decisão fica no gateway.
+Com o gateway, o CORS é respondido pelo Kong (origem `http://localhost:5173`),
+inclusive para user-service e sales-service, que não têm CORS próprio. O
+`CORS_ORIGINS` deste backend só vale para o acesso direto na porta 8000.
+
 ---
 
 ## URLs
